@@ -10,7 +10,7 @@ export async function createTicketPayment (req: AuthenticatedRequest, res: Respo
 
     const {cardData} = req.body
     const userId = req.userId
-    const ticketId = req.params.ticketId
+    const ticketId = req.body.ticketId
     
     try {
 
@@ -21,7 +21,11 @@ export async function createTicketPayment (req: AuthenticatedRequest, res: Respo
         const enrollment = await enrollmentRepository.findWithAddressByUserId(userId)
         const checkTicket = await paymentsRepository.checkTicket(Number(ticketId))
 
-        if(checkTicket.enrollmentId !== enrollment.id){
+        if(!checkTicket) {
+            res.sendStatus(404)
+        }
+
+        if(checkTicket?.enrollmentId !== enrollment?.id){
             return res.sendStatus(401)
         }
 
@@ -29,7 +33,7 @@ export async function createTicketPayment (req: AuthenticatedRequest, res: Respo
         res.status(200).send(payment)
 
     } catch (err) {
-        console.log(err)
+
         res.sendStatus(500)
     }
 }
@@ -46,9 +50,14 @@ export async function getTicketPayment (req: AuthenticatedRequest, res: Response
         }
 
         const checkTicket = await paymentsRepository.checkTicket(Number(ticketId))
+
+        if (!checkTicket) {
+            res.sendStatus(404)
+        }
+
         const enrollment = await enrollmentRepository.findWithAddressByUserId(userId)
 
-        if(checkTicket.enrollmentId !== enrollment.id){
+        if(checkTicket?.enrollmentId !== enrollment?.id){
             return res.sendStatus(401)
         }
 
@@ -56,7 +65,6 @@ export async function getTicketPayment (req: AuthenticatedRequest, res: Response
         res.status(200).send(payment)
 
     } catch (err) {
-         console.log(err)
          res.sendStatus(500)
     }
 
